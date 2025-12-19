@@ -263,6 +263,20 @@ calculateBtn.addEventListener('click', calculateFinancials);
 
 resetBtn.addEventListener('click', resetForm);
 
+// Initialize form with default values and calculate on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Set default values
+    totalRoomsInput.value = 10;
+    totalBedsInput.value = 20; // 2 beds per room by default
+    pricePerBedInput.value = 12000;
+    occupancySelect.value = 0.9; // 90% occupancy by default
+    bedOpexInput.value = 8000;
+    annualSalariesInput.value = 300000;
+    
+    // Trigger calculation
+    calculateFinancials();
+});
+
 // View selector
 viewSelect.addEventListener('change', toggleView);
 
