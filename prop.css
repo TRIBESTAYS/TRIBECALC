@@ -468,8 +468,163 @@ footer p {
     }
 }
 
-/* Mobile-specific adjustments */
-@media (max-width: 480px) {
+/* Executive Summary */
+.executive-summary {
+    background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+    color: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+}
+
+.summary-text {
+    font-size: 1.1rem;
+    font-weight: 500;
+    text-align: center;
+    line-height: 1.4;
+}
+
+/* Scenario Comparison */
+.scenario-comparison {
+    margin-bottom: 2rem;
+}
+
+.scenario-comparison h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #1e3a8a;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.scenario-table-container {
+    overflow-x: auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.scenario-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    font-size: 0.9rem;
+}
+
+.scenario-table th {
+    background: #f8fafc;
+    padding: 0.75rem;
+    text-align: left;
+    font-weight: 600;
+    color: #374151;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.scenario-table td {
+    padding: 0.75rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.scenario-table tr.current-occupancy {
+    background: #eff6ff;
+    font-weight: 600;
+}
+
+.scenario-table tr:not(.current-occupancy) {
+    opacity: 0.7;
+}
+
+.scenario-table .ebitda-cell.positive {
+    color: #10b981;
+    font-weight: 600;
+}
+
+.scenario-table .ebitda-cell.negative {
+    color: #ef4444;
+    font-weight: 600;
+}
+
+/* Risk Signals */
+.risk-signals {
+    margin-bottom: 2rem;
+}
+
+.risk-badges {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.ebitda-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.ebitda-badge.healthy {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.ebitda-badge.thin-margins {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.ebitda-badge.loss-making {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.risk-drivers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.risk-chip {
+    padding: 0.25rem 0.75rem;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    background: #f3f4f6;
+    color: #374151;
+    border: 1px solid #d1d5db;
+}
+
+/* Color-coded result cards */
+.result-card.good {
+    border-left-color: #10b981;
+    background-color: #f0fdf4;
+}
+
+.result-card.good .result-icon {
+    color: #10b981;
+}
+
+.result-card.warning {
+    border-left-color: #f59e0b;
+    background-color: #fffbeb;
+}
+
+.result-card.warning .result-icon {
+    color: #f59e0b;
+}
+
+.result-card.bad {
+    border-left-color: #ef4444;
+    background-color: #fef2f2;
+}
+
+.result-card.bad .result-icon {
+    color: #ef4444;
+}
     h1 {
         font-size: 1.5rem;
     }
@@ -490,4 +645,3 @@ footer p {
         height: 40px;
         font-size: 0.9rem;
     }
-}

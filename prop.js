@@ -186,6 +186,11 @@ function calculateFinancials() {
         statusBadge.className = 'status-badge loss-making';
         statusText.textContent = 'Loss-making';
     }
+    
+    // Generate new features
+    generateExecutiveSummary();
+    generateScenarioComparison();
+    generateRiskSignals();
 }
 
 // Reset form to default values
@@ -231,6 +236,205 @@ function resetForm() {
     inputs.forEach(input => {
         input.style.borderColor = '#d1d5db';
     });
+    
+    // Hide new sections
+    document.getElementById('executiveSummary').style.display = 'none';
+    document.getElementById('scenarioComparison').style.display = 'none';
+    document.getElementById('riskSignals').style.display = 'none';
+}
+
+// Run scenario with different occupancy
+function runScenario(occupancyValue) {
+    const originalOccupancy = occupancySelect.value;
+    
+    // Temporarily set occupancy
+    occupancySelect.value = occupancyValue;
+    
+    // Get input values for this scenario
+    const totalRooms = parseFloat(totalRoomsInput.value) || 0;
+    const totalBeds = parseFloat(totalBedsInput.value) || 0;
+    const pricePerBed = parseFloat(pricePerBedInput.value) || 0;
+    const occupancy = parseFloat(occupancyValue) || 0;
+    const bedOpex = parseFloat(bedOpexInput.value) || 0;
+    const monthlySalaries = parseFloat(annualSalariesInput.value) || 0;
+    const marketingRate = 0.05;
+    const operatorRevenueCut = 0.05;
+    const operatorProfitShare = 0.15;
+    const ownerProfitShare = 0.85;
+    
+    // Calculate scenario results (reuse logic from calculateFinancials)
+    const occupiedBeds = totalBeds * occupancy;
+    const occupiedRooms = occupiedBeds / 2;
+    const revenue = occupiedBeds * pricePerBed;
+    const operatorRevenueCutAmount = revenue * operatorRevenueCut;
+    const contribution = revenue - operatorRevenueCutAmount;
+    const marketing = revenue * marketingRate;
+    const roomOpex = bedOpex * 2;
+    const totalOpex = occupiedRooms * roomOpex;
+    const ebitda = contribution - totalOpex - monthlySalaries - marketing;
+    
+    // Yearly calculations
+    const yearlyRevenue = revenue * 12;
+    const yearlyEbitda = ebitda * 12;
+    
+    // Restore original occupancy
+    occupancySelect.value = originalOccupancy;
+    
+    return {
+        occupancy: occupancyValue,
+        monthlyRevenue: formatCurrency(revenue),
+        monthlyEbitda: formatCurrency(ebitda),
+        yearlyRevenue: formatCurrency(yearlyRevenue),
+        yearlyEbitda: formatCurrency(yearlyEbitda),
+        monthlyStatus: getStatusFromEBITDA(formatCurrency(ebitda)),
+        yearlyStatus: getStatusFromEBITDA(formatCurrency(yearlyEbitda)),
+        isPositive: ebitda >= 0
+    };
+}
+
+// Get status based on EBITDA value
+function getStatusFromEBITDA(ebitdaText) {
+    const ebitdaValue = parseFloat(ebitdaText.replace('₹', '').replace(/,/g, ''));
+    if (ebitdaValue < 0) return 'Loss';
+    if (ebitdaValue >= 0 && ebitdaValue < 50000) return 'Break-even';
+    if (ebitdaValue >= 50000 && ebitdaValue < 100000) return 'Stable';
+    if (ebitdaValue >= 100000 && ebitdaValue < 200000) return 'Strong';
+    return 'Excellent';
+}
+
+// Generate executive summary
+function generateExecutiveSummary() {
+    const isYearlyView = viewSelect.value === 'yearly';
+    const occupancyPercent = (parseFloat(occupancySelect.value) * 100).toFixed(0) + '%';
+    const beds = parseFloat(totalBedsInput.value) || 0;
+    const ebitdaText = isYearlyView ? yearlyEbitdaEl.textContent : ebitdaEl.textContent;
+    const status = getStatusFromEBITDA(ebitdaText);
+    
+    let statusDescription = '';
+    if (status === 'Loss') {
+        statusDescription = 'loss-making';
+    } else if (status === 'Break-even') {
+        statusDescription = 'break-even';
+    } else {
+        statusDescription = 'profitable';
+    }
+    
+    const period = isYearlyView ? 'yearly' : 'monthly';
+    const summary = `At ${occupancyPercent} occupancy, this ${beds}-bed property generates ${ebitdaText} ${period} EBITDA with ${statusDescription} margins for the owner.`;
+    
+    document.getElementById('summaryText').textContent = summary;
+    document.getElementById('executiveSummary').style.display = 'block';
+}
+
+// Generate scenario comparison table
+function generateScenarioComparison() {
+    const currentOccupancy = parseFloat(occupancySelect.value);
+    const scenarios = [0.6, 0.7, 0.8, 0.9, 1.0];
+    const tableBody = document.getElementById('scenarioTableBody');
+    const isYearlyView = viewSelect.value === 'yearly';
+    
+    tableBody.innerHTML = '';
+    
+    scenarios.forEach(occupancy => {
+        const result = runScenario(occupancy);
+        const row = document.createElement('tr');
+        
+        if (Math.abs(occupancy - currentOccupancy) < 0.01) {
+            row.classList.add('current-occupancy');
+        }
+        
+        const revenue = isYearlyView ? result.yearlyRevenue : result.monthlyRevenue;
+        const ebitda = isYearlyView ? result.yearlyEbitda : result.monthlyEbitda;
+        const status = isYearlyView ? result.yearlyStatus : result.monthlyStatus;
+        
+        row.innerHTML = `
+            <td>${(occupancy * 100).toFixed(0)}%</td>
+            <td>${revenue}</td>
+            <td class="ebitda-cell ${result.isPositive ? 'positive' : 'negative'}">${ebitda}</td>
+            <td>${status}</td>
+        `;
+        
+        tableBody.appendChild(row);
+    });
+    
+    document.getElementById('scenarioComparison').style.display = 'block';
+}
+
+// Generate risk signals
+function generateRiskSignals() {
+    const isYearlyView = viewSelect.value === 'yearly';
+    const revenue = parseFloat((isYearlyView ? yearlyRevenueEl : monthlyRevenueEl).textContent.replace('₹', '').replace(/,/g, ''));
+    const ebitda = parseFloat((isYearlyView ? yearlyEbitdaEl : ebitdaEl).textContent.replace('₹', '').replace(/,/g, ''));
+    const bedOpex = parseFloat(bedOpexInput.value) || 0;
+    const occupiedBeds = parseFloat(occupiedBedsEl.textContent) || 0;
+    const pricePerBed = parseFloat(pricePerBedInput.value) || 0;
+    
+    // EBITDA Risk Badge
+    const margin = revenue > 0 ? (ebitda / revenue) * 100 : 0;
+    const badge = document.getElementById('ebitdaBadge');
+    const badgeIcon = document.getElementById('ebitdaBadgeIcon');
+    const badgeText = document.getElementById('ebitdaBadgeText');
+    
+    if (ebitda < 0) {
+        badge.className = 'ebitda-badge loss-making';
+        badgeIcon.textContent = '🔴';
+        badgeText.textContent = 'Loss-making';
+    } else if (margin >= 20) {
+        badge.className = 'ebitda-badge healthy';
+        badgeIcon.textContent = '🟢';
+        badgeText.textContent = 'Healthy';
+    } else {
+        badge.className = 'ebitda-badge thin-margins';
+        badgeIcon.textContent = '🟡';
+        badgeText.textContent = 'Thin margins';
+    }
+    
+    // Color-coded cards
+    const resultCards = document.querySelectorAll('.result-card');
+    resultCards.forEach(card => {
+        card.classList.remove('good', 'warning', 'bad');
+        if (ebitda > 0) {
+            card.classList.add('good');
+        } else {
+            card.classList.add('bad');
+        }
+    });
+    
+    // Risk Drivers
+    const riskDrivers = document.getElementById('riskDrivers');
+    riskDrivers.innerHTML = '';
+    
+    // Opex-heavy: If bed opex > 50% of price per bed
+    if (bedOpex > pricePerBed * 0.5) {
+        const chip = document.createElement('div');
+        chip.className = 'risk-chip';
+        chip.textContent = 'Opex-heavy';
+        riskDrivers.appendChild(chip);
+    }
+    
+    // Rent-sensitive: If price per bed is high relative to EBITDA per bed
+    const ebitdaPerBed = occupiedBeds > 0 ? ebitda / occupiedBeds : 0;
+    if (pricePerBed > 15000 && ebitdaPerBed < 2000) {
+        const chip = document.createElement('div');
+        chip.className = 'risk-chip';
+        chip.textContent = 'Rent-sensitive';
+        riskDrivers.appendChild(chip);
+    }
+    
+    // Occupancy-sensitive: If EBITDA flips sign between 70-80%
+    const scenario70 = runScenario(0.7);
+    const scenario80 = runScenario(0.8);
+    const ebitda70 = parseFloat((isYearlyView ? scenario70.yearlyEbitda : scenario70.monthlyEbitda).replace('₹', '').replace(/,/g, ''));
+    const ebitda80 = parseFloat((isYearlyView ? scenario80.yearlyEbitda : scenario80.monthlyEbitda).replace('₹', '').replace(/,/g, ''));
+    
+    if ((ebitda70 > 0 && ebitda80 < 0) || (ebitda70 < 0 && ebitda80 > 0)) {
+        const chip = document.createElement('div');
+        chip.className = 'risk-chip';
+        chip.textContent = 'Occupancy-sensitive';
+        riskDrivers.appendChild(chip);
+    }
+    
+    document.getElementById('riskSignals').style.display = 'block';
 }
 
 // Sync beds and rooms (2 beds per room)
@@ -252,6 +456,17 @@ function toggleView() {
     } else {
         monthlyResults.style.display = 'none';
         yearlyResults.style.display = 'block';
+    }
+    
+    // Update features to reflect current view
+    if (document.getElementById('executiveSummary').style.display !== 'none') {
+        generateExecutiveSummary();
+    }
+    if (document.getElementById('scenarioComparison').style.display !== 'none') {
+        generateScenarioComparison();
+    }
+    if (document.getElementById('riskSignals').style.display !== 'none') {
+        generateRiskSignals();
     }
 }
 
@@ -295,6 +510,11 @@ window.addEventListener('DOMContentLoaded', () => {
     // Set initial profit split visualization
     ownerSplitVisual.style.width = '85%';
     operatorSplitVisual.style.width = '15%';
+    
+    // Hide new sections initially
+    document.getElementById('executiveSummary').style.display = 'none';
+    document.getElementById('scenarioComparison').style.display = 'none';
+    document.getElementById('riskSignals').style.display = 'none';
     
     // Don't perform calculation on page load
     // User needs to click calculate after entering values
