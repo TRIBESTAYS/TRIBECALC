@@ -4,9 +4,25 @@
     {
       "src": "propCal.html",
       "use": "@vercel/static"
+    },
+    {
+      "src": "prop.js",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "prop.css",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
+    {
+      "src": "/prop.js",
+      "dest": "/prop.js"
+    },
+    {
+      "src": "/prop.css",
+      "dest": "/prop.css"
+    },
     {
       "src": "/(.*)",
       "dest": "/propCal.html"
